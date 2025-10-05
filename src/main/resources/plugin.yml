@@ -1,0 +1,32 @@
+name: AzTemFly
+version: '1.0-SNAPSHOT'
+main: io.github.AzmiiD.azTemFly.AzTemFly
+api-version: '1.21'
+authors: [ Azmii_ ]
+description: System TemFly For Minecraft Server
+softdepend: [PlaceholderAPI]
+
+commands:
+  tfly:
+    description: Give temporary fly time to a player
+    usage: /tfly <player> <seconds>
+    permission: tfly.give
+  tflytime:
+    description: Check your remaining fly time
+    usage: /tflytime
+    permission: tfly.use
+  tflyreload:
+    description: Reload the plugin configuration
+    usage: /tflyreload
+    permission: tfly.reload
+
+permissions:
+  tfly.give:
+    description: Allows giving temporary fly time to players
+    default: op
+  tfly.use:
+    description: Allows using temporary fly time
+    default: true
+  tfly.reload:
+    description: Allows reloading the plugin configuration
+    default: op

@@ -1,0 +1,63 @@
+# TempFly Configuration File
+# Support color codes: & (legacy) and MiniMessage format
+# MiniMessage: <green>, <red>, <yellow>, <gradient:red:blue>, etc.
+
+# Plugin prefix for all messages
+prefix: "&8[&bTempFly&8]&r "
+
+# Messages
+messages:
+  # Success messages
+  fly-time-received: "<green>You received temporary fly time for <yellow>{time}</yellow>!"
+  fly-time-given: "<green>Given <yellow>{time}</yellow> of fly time to <yellow>{player}</yellow>!"
+
+  # Info messages
+  time-remaining: "<green>Remaining fly time: <yellow>{time}</yellow> <gray>({seconds} seconds)</gray>"
+  no-time-remaining: "<yellow>You have no temporary fly time remaining."
+
+  # Warning/Error messages
+  fly-time-expired: "<red>Your temporary fly time has expired!"
+  no-permission: "<red>You don't have permission to use this command!"
+  player-not-found: "<red>Player not found: <yellow>{player}</yellow>"
+  invalid-number: "<red>Invalid number: <yellow>{input}</yellow>"
+  must-be-positive: "<red>Seconds must be a positive number!"
+  player-no-permission: "<red>{player} doesn't have permission to use temporary fly!"
+  player-only: "<red>This command can only be used by players!"
+
+  # Usage messages
+  usage-tfly: "<red>Usage: /tfly <player> <seconds>"
+  usage-tflytime: "<red>Usage: /tflytime"
+
+# Auto-save settings
+auto-save:
+  enabled: true
+  interval: 60  # Save every 60 seconds
+
+# Time format settings
+time-format:
+  show-seconds: true      # Show seconds in formatted time
+  show-minutes: true      # Show minutes in formatted time
+  show-hours: true        # Show hours in formatted time
+  # Custom format labels (you can translate these)
+  hour-label: "h"
+  minute-label: "m"
+  second-label: "s"
+
+# Flight settings
+flight:
+  # Disable flight when player changes to these gamemodes
+  disable-in-creative: false
+  disable-in-spectator: false
+
+  # Warn player when time is low
+  low-time-warning:
+    enabled: true
+    threshold: 60  # Warn when <= 60 seconds remaining
+    message: "<yellow>⚠ Your fly time is running low: <red>{time}</red> remaining!"
+
+# PlaceholderAPI settings
+placeholders:
+  no-time-format: "0s"  # What to show when player has no fly time
+
+# Debug mode (shows detailed logs)
+debug: false

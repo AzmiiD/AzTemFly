@@ -1,0 +1,8 @@
+io\github\AzmiiD\azTemFly\AzTemFly.class
+io\github\AzmiiD\azTemFly\managers\ConfigManager.class
+io\github\AzmiiD\azTemFly\commands\TFlyCommand.class
+io\github\AzmiiD\azTemFly\commands\TFlyTimeCommand.class
+io\github\AzmiiD\azTemFly\placeholders\TempFlyPlaceholder.class
+io\github\AzmiiD\azTemFly\listeners\PlayerListener.class
+io\github\AzmiiD\azTemFly\commands\TFlyReloadCommand.class
+io\github\AzmiiD\azTemFly\managers\FlyTimeManager.class
