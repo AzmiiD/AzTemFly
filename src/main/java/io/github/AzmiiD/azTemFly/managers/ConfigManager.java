@@ -183,6 +183,13 @@ public class ConfigManager {
     }
 
     /**
+     * Get list of compatibility permissions
+     */
+    public java.util.List<String> getCompatibilityPermissions() {
+        return config.getStringList("flight.compatibility-permissions");
+    }
+
+    /**
      * Check if time component should be shown
      */
     public boolean shouldShowHours() {

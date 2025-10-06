@@ -3,17 +3,19 @@
 # MiniMessage: <green>, <red>, <yellow>, <gradient:red:blue>, etc.
 
 # Plugin prefix for all messages
-prefix: "&8[&bTempFly&8]&r "
+prefix: "<yellow><b>TempFly</b></yellow><light_purple>>></light_purple> "
 
 # Messages
 messages:
   # Success messages
   fly-time-received: "<green>You received temporary fly time for <yellow>{time}</yellow>!"
   fly-time-given: "<green>Given <yellow>{time}</yellow> of fly time to <yellow>{player}</yellow>!"
+  fly-enabled: "<green>Fly mode <bold>ENABLED</bold>! Your fly time will continue to decrease."
+  fly-disabled: "<yellow>Fly mode <bold>DISABLED</bold>! Your fly time will continue to decrease."
 
   # Info messages
   time-remaining: "<green>Remaining fly time: <yellow>{time}</yellow> <gray>({seconds} seconds)</gray>"
-  no-time-remaining: "<yellow>You have no temporary fly time remaining."
+  no-time-remaining: "<gray>You have no temporary fly time remaining."
 
   # Warning/Error messages
   fly-time-expired: "<red>Your temporary fly time has expired!"
@@ -46,14 +48,23 @@ time-format:
 # Flight settings
 flight:
   # Disable flight when player changes to these gamemodes
-  disable-in-creative: false
-  disable-in-spectator: false
+  disable-in-creative: true
+  disable-in-spectator: true
+
+  # Compatibility with other fly plugins
+  # TempFly will NOT disable flight if player has these permissions
+  # This prevents conflicts with Essentials, CMI, etc.
+  compatibility-permissions:
+    - "essentials.fly"
+    - "cmi.command.fly"
+    - "minecraft.command.fly"
+    - "ultimatecore.fly"
 
   # Warn player when time is low
   low-time-warning:
     enabled: true
     threshold: 60  # Warn when <= 60 seconds remaining
-    message: "<yellow>⚠ Your fly time is running low: <red>{time}</red> remaining!"
+    message: "<red>⚠ Your fly time is running low: <gray>{time}</gray> remaining!"
 
 # PlaceholderAPI settings
 placeholders:

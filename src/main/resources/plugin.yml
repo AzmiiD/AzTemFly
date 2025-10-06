@@ -1,5 +1,5 @@
 name: AzTemFly
-version: '1.0-SNAPSHOT'
+version: ' v1.0'
 main: io.github.AzmiiD.azTemFly.AzTemFly
 api-version: '1.21'
 authors: [ Azmii_ ]
@@ -8,9 +8,9 @@ softdepend: [PlaceholderAPI]
 
 commands:
   tfly:
-    description: Give temporary fly time to a player
-    usage: /tfly <player> <seconds>
-    permission: tfly.give
+    description: Toggle fly or give temporary fly time to a player
+    usage: /tfly <on|off> or /tfly <player> <seconds>
+    permission: tfly.use
   tflytime:
     description: Check your remaining fly time
     usage: /tflytime

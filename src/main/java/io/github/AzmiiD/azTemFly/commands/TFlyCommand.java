@@ -12,16 +12,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Command: /tfly <player> <seconds>
- * Gives temporary fly time to a player
- */
 public class TFlyCommand implements CommandExecutor, TabCompleter {
 
     private final AzTemFly plugin;
@@ -38,19 +31,52 @@ public class TFlyCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
 
-        // Check permission
+        // Cek izin
+        if (!sender.hasPermission("tfly.give") && !sender.hasPermission("tfly.use")) {
+            sender.sendMessage(configManager.getMessage("no-permission"));
+            return true;
+        }
+
+        // Handle toggle (player only): /tfly on/off
+        if (args.length == 1 && (args[0].equalsIgnoreCase("on") || args[0].equalsIgnoreCase("off"))) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(configManager.getMessage("player-only"));
+                return true;
+            }
+
+            if (!player.hasPermission("tfly.use")) {
+                player.sendMessage(configManager.getMessage("no-permission"));
+                return true;
+            }
+
+            // Cek apakah punya waktu fly
+            if (!manager.hasFlyTime(player.getUniqueId())) {
+                player.sendMessage(configManager.getMessage("no-time-remaining"));
+                return true;
+            }
+
+            boolean enable = args[0].equalsIgnoreCase("on");
+            manager.setFlyEnabled(player.getUniqueId(), enable);
+
+            if (enable) {
+                player.sendMessage(configManager.getMessage("fly-enabled"));
+            } else {
+                player.sendMessage(configManager.getMessage("fly-disabled"));
+            }
+            return true;
+        }
+
+        // Handle give time: /tfly <player> <seconds>
         if (!sender.hasPermission("tfly.give")) {
             sender.sendMessage(configManager.getMessage("no-permission"));
             return true;
         }
 
-        // Check arguments
         if (args.length != 2) {
             sender.sendMessage(configManager.getMessage("usage-tfly"));
             return true;
         }
 
-        // Get target player
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
             Map<String, String> placeholders = new HashMap<>();
@@ -59,7 +85,6 @@ public class TFlyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Parse seconds
         int seconds;
         try {
             seconds = Integer.parseInt(args[1]);
@@ -74,7 +99,6 @@ public class TFlyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Check if target has permission to use fly
         if (!target.hasPermission("tfly.use")) {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("player", target.getName());
@@ -82,10 +106,7 @@ public class TFlyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Add fly time
         manager.addFlyTime(target.getUniqueId(), seconds);
-
-        // Send messages
         String formattedTime = manager.formatTime(seconds);
 
         Map<String, String> targetPlaceholders = new HashMap<>();
@@ -103,21 +124,29 @@ public class TFlyCommand implements CommandExecutor, TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                 @NotNull String label, @NotNull String[] args) {
+
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            // Suggest online player names
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .collect(Collectors.toList());
-        } else if (args.length == 2) {
-            // Suggest common time values
-            completions.add("60");    // 1 minute
-            completions.add("300");   // 5 minutes
-            completions.add("600");   // 10 minutes
-            completions.add("1800");  // 30 minutes
-            completions.add("3600");  // 1 hour
+            // Tambahkan toggle on/off untuk player
+            if (sender.hasPermission("tfly.use")) {
+                completions.add("on");
+                completions.add("off");
+            }
+
+            // Tambahkan nama player untuk admin yang punya tfly.give
+            if (sender.hasPermission("tfly.give")) {
+                completions.addAll(
+                        Bukkit.getOnlinePlayers().stream()
+                                .map(Player::getName)
+                                .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                                .collect(Collectors.toList())
+                );
+            }
+
+        } else if (args.length == 2 && sender.hasPermission("tfly.give")) {
+            // Saran durasi umum (untuk admin give)
+            completions.addAll(Arrays.asList("60", "300", "600", "1800", "3600"));
         }
 
         return completions;

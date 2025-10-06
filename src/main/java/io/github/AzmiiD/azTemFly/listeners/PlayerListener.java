@@ -63,19 +63,23 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        // If trying to enable flight, only check if player doesn't have TempFly time
-        // This allows Essentials or other plugins to work independently
-        if (!manager.hasFlyTime(player.getUniqueId())) {
-            // Player doesn't have TempFly time, let other plugins handle it
-            // Don't cancel here to avoid conflicts
-            return;
-        }
+        // If trying to enable flight
+        if (manager.hasFlyTime(player.getUniqueId())) {
+            // Player has TempFly time, but check if they toggled it OFF
+            if (!manager.isFlyEnabled(player.getUniqueId())) {
+                event.setCancelled(true);
+                player.setAllowFlight(false);
+                return;
+            }
 
-        // Player has TempFly time, ensure they can fly
-        if (!player.hasPermission("tfly.use")) {
-            event.setCancelled(true);
-            player.setAllowFlight(false);
+            // Check permission
+            if (!player.hasPermission("tfly.use")) {
+                event.setCancelled(true);
+                player.setAllowFlight(false);
+                return;
+            }
         }
+        // If player doesn't have TempFly time, let other plugins handle it
     }
 
     /**

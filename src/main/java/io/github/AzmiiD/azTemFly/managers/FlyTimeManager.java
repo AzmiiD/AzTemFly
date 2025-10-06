@@ -23,6 +23,7 @@ public class FlyTimeManager {
     private final AzTemFly plugin;
     private final ConfigManager configManager;
     private final Map<UUID, Integer> flyTimeMap; // UUID -> remaining seconds
+    private final Map<UUID, Boolean> flyToggleMap; // UUID -> is fly enabled (true/false)
     private final Map<UUID, Boolean> lowTimeWarned; // Track if player was warned
     private final File dataFile;
     private FileConfiguration dataConfig;
@@ -32,6 +33,7 @@ public class FlyTimeManager {
         this.plugin = plugin;
         this.configManager = plugin.getConfigManager();
         this.flyTimeMap = new HashMap<>();
+        this.flyToggleMap = new HashMap<>();
         this.lowTimeWarned = new HashMap<>();
         this.dataFile = new File(plugin.getDataFolder(), "flydata.yml");
     }
@@ -44,6 +46,7 @@ public class FlyTimeManager {
     public void addFlyTime(UUID uuid, int seconds) {
         int currentTime = flyTimeMap.getOrDefault(uuid, 0);
         flyTimeMap.put(uuid, currentTime + seconds);
+        flyToggleMap.put(uuid, true); // Auto-enable fly when time is given
         lowTimeWarned.remove(uuid); // Reset warning when time is added
 
         // Enable flight for online players
@@ -51,6 +54,36 @@ public class FlyTimeManager {
         if (player != null && player.isOnline()) {
             enableFlight(player);
         }
+    }
+
+    /**
+     * Toggle fly on/off for a player
+     * @param uuid Player's UUID
+     * @param enabled true to enable, false to disable
+     */
+    public void setFlyEnabled(UUID uuid, boolean enabled) {
+        if (!hasFlyTime(uuid)) {
+            return; // Can't toggle if no time
+        }
+
+        flyToggleMap.put(uuid, enabled);
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null && player.isOnline()) {
+            if (enabled) {
+                enableFlight(player);
+            } else {
+                disableFlight(player);
+            }
+        }
+    }
+
+    /**
+     * Check if player has fly enabled (not just has time)
+     * @param uuid Player's UUID
+     * @return true if fly is enabled
+     */
+    public boolean isFlyEnabled(UUID uuid) {
+        return flyToggleMap.getOrDefault(uuid, false);
     }
 
     /**
@@ -109,12 +142,25 @@ public class FlyTimeManager {
 
     /**
      * Disable flight for a player
+     * Only disable if they don't have other fly permissions
      */
     private void disableFlight(Player player) {
-        if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR) {
-            player.setAllowFlight(false);
-            player.setFlying(false);
+        // Don't disable if in Creative/Spectator
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+            return;
         }
+
+        // Check compatibility permissions from config
+        for (String permission : configManager.getCompatibilityPermissions()) {
+            if (player.hasPermission(permission)) {
+                // Player has fly from another plugin, don't disable
+                return;
+            }
+        }
+
+        // Safe to disable - player has no other fly source
+        player.setAllowFlight(false);
+        player.setFlying(false);
     }
 
     /**
@@ -129,14 +175,15 @@ public class FlyTimeManager {
 
                 if (currentTime <= 0) {
                     flyTimeMap.remove(uuid);
+                    flyToggleMap.remove(uuid);
                     lowTimeWarned.remove(uuid);
                     continue;
                 }
 
                 // Check for low time warning
-                if (configManager.isLowTimeWarningEnabled()) {
+                if (configManager.isLowTimeWarningEnabled() && currentTime > 0) {
                     int threshold = configManager.getLowTimeWarningThreshold();
-                    if (currentTime <= threshold && currentTime > 0 && !lowTimeWarned.getOrDefault(uuid, false)) {
+                    if (currentTime <= threshold && !lowTimeWarned.getOrDefault(uuid, false)) {
                         Player player = Bukkit.getPlayer(uuid);
                         if (player != null && player.isOnline()) {
                             String formattedTime = formatTime(currentTime);
@@ -153,6 +200,7 @@ public class FlyTimeManager {
                 // Check if time expired
                 if (currentTime <= 0) {
                     flyTimeMap.remove(uuid);
+                    flyToggleMap.remove(uuid);
                     lowTimeWarned.remove(uuid);
                     Player player = Bukkit.getPlayer(uuid);
                     if (player != null && player.isOnline()) {
@@ -186,7 +234,9 @@ public class FlyTimeManager {
      */
     public void loadData() {
         if (!dataFile.exists()) {
-            plugin.getDataFolder().mkdirs();
+            if (!plugin.getDataFolder().exists()) {
+                plugin.getDataFolder().mkdirs();
+            }
             try {
                 dataFile.createNewFile();
             } catch (IOException e) {
@@ -213,6 +263,19 @@ public class FlyTimeManager {
             }
         }
 
+        // Load fly toggle states
+        if (dataConfig.contains("flytoggle")) {
+            for (String key : dataConfig.getConfigurationSection("flytoggle").getKeys(false)) {
+                try {
+                    UUID uuid = UUID.fromString(key);
+                    boolean enabled = dataConfig.getBoolean("flytoggle." + key, true);
+                    flyToggleMap.put(uuid, enabled);
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Invalid UUID in toggle data: " + key);
+                }
+            }
+        }
+
         plugin.getLogger().info("Loaded fly time data for " + flyTimeMap.size() + " players.");
     }
 
@@ -226,10 +289,16 @@ public class FlyTimeManager {
 
         // Clear old data
         dataConfig.set("flytime", null);
+        dataConfig.set("flytoggle", null);
 
         // Save current fly times
         for (Map.Entry<UUID, Integer> entry : flyTimeMap.entrySet()) {
             dataConfig.set("flytime." + entry.getKey().toString(), entry.getValue());
+        }
+
+        // Save fly toggle states
+        for (Map.Entry<UUID, Boolean> entry : flyToggleMap.entrySet()) {
+            dataConfig.set("flytoggle." + entry.getKey().toString(), entry.getValue());
         }
 
         try {
@@ -245,7 +314,10 @@ public class FlyTimeManager {
      */
     public void handlePlayerJoin(Player player) {
         if (hasFlyTime(player.getUniqueId()) && player.hasPermission("tfly.use")) {
-            enableFlight(player);
+            // Only enable if fly toggle is ON
+            if (isFlyEnabled(player.getUniqueId())) {
+                enableFlight(player);
+            }
         }
     }
 
