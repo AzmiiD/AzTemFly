@@ -49,6 +49,15 @@ flight:
   disable-in-creative: false
   disable-in-spectator: false
 
+  # Compatibility with other fly plugins
+  # TempFly will NOT disable flight if player has these permissions
+  # This prevents conflicts with Essentials, CMI, etc.
+  compatibility-permissions:
+    - "essentials.fly"
+    - "cmi.command.fly"
+    - "minecraft.command.fly"
+    - "ultimatecore.fly"
+
   # Warn player when time is low
   low-time-warning:
     enabled: true
